@@ -1,0 +1,303 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  getAllDocumentsByUserId,
+  getDocumentsByCategory,
+  searchDocumentsByFileName,
+  deleteDocument,
+  downloadDocument,
+} from "../services/api";
+import "./Documents.css";
+
+const Documents = ({ currentUser }) => {
+  const navigate = useNavigate();
+  const [documents, setDocuments] = useState([]);
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const categories = [
+    "All",
+    "Personal",
+    "Work",
+    "Financial",
+    "Legal",
+    "Medical",
+    "Education",
+    "Other",
+  ];
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchDocuments();
+    } else {
+      setLoading(false);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    filterDocuments();
+  }, [documents, searchTerm, selectedCategory]);
+
+  const fetchDocuments = async () => {
+    setLoading(true);
+    try {
+      const docs = await getAllDocumentsByUserId(currentUser.id);
+      setDocuments(docs);
+      setFilteredDocuments(docs);
+    } catch (err) {
+      setError("Failed to fetch documents");
+      console.error("Error fetching documents:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterDocuments = () => {
+    let filtered = documents;
+
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter((doc) => doc.category === selectedCategory);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter((doc) =>
+        doc.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredDocuments(filtered);
+  };
+
+  const handleDelete = async (documentId) => {
+    if (window.confirm("Are you sure you want to delete this document?")) {
+      try {
+        await deleteDocument(documentId);
+        setDocuments(documents.filter((doc) => doc.id !== documentId));
+        alert("Document deleted successfully");
+      } catch (err) {
+        alert("Failed to delete document");
+        console.error("Delete error:", err);
+      }
+    }
+  };
+
+  const handleDownload = async (doc) => {
+    try {
+      const blob = await downloadDocument(doc.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = doc.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      // Save download to history
+      saveDownloadHistory(doc);
+    } catch (err) {
+      alert("Failed to download document");
+      console.error("Download error:", err);
+    }
+  };
+
+  const saveDownloadHistory = (doc) => {
+    const downloadEntry = {
+      downloadId: Date.now() + Math.random(),
+      documentId: doc.id,
+      fileName: doc.fileName,
+      fileType: doc.fileType,
+      fileSize: doc.fileSize,
+      category: doc.category,
+      description: doc.description,
+      downloadDate: new Date().toISOString(),
+      userId: currentUser.id,
+    };
+
+    // Get existing downloads from localStorage
+    const existingDownloads = localStorage.getItem("downloadHistory");
+    const downloads = existingDownloads ? JSON.parse(existingDownloads) : [];
+
+    // Add new download to the beginning
+    downloads.unshift(downloadEntry);
+
+    // Keep only the last 100 downloads
+    const limitedDownloads = downloads.slice(0, 100);
+
+    // Save back to localStorage
+    localStorage.setItem("downloadHistory", JSON.stringify(limitedDownloads));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getFileIcon = (fileType) => {
+    if (fileType?.includes("pdf")) return "fa-file-pdf";
+    if (fileType?.includes("image")) return "fa-file-image";
+    if (fileType?.includes("word") || fileType?.includes("document"))
+      return "fa-file-word";
+    if (fileType?.includes("excel") || fileType?.includes("spreadsheet"))
+      return "fa-file-excel";
+    if (fileType?.includes("powerpoint") || fileType?.includes("presentation"))
+      return "fa-file-powerpoint";
+    if (fileType?.includes("zip") || fileType?.includes("compressed"))
+      return "fa-file-archive";
+    return "fa-file-alt";
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="documents-container">
+        <div className="auth-required">
+          <i className="fas fa-lock"></i>
+          <h2>Authentication Required</h2>
+          <p>Please login to view your documents</p>
+          <button onClick={() => navigate("/login")} className="btn-primary">
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="documents-container">
+      <div className="documents-header">
+        <div className="header-content">
+          <h1>
+            <i className="fas fa-folder-open"></i> My Documents
+          </h1>
+          <p>Manage and organize your uploaded documents</p>
+        </div>
+        <button onClick={() => navigate("/upload")} className="btn-upload">
+          <i className="fas fa-plus"></i> Upload New
+        </button>
+      </div>
+
+      <div className="documents-filters">
+        <div className="search-box">
+          <i className="fas fa-search"></i>
+          <input
+            type="text"
+            placeholder="Search documents..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="category-filters">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className={`category-btn ${
+                selectedCategory === cat ? "active" : ""
+              }`}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && (
+        <div className="error-message">
+          <i className="fas fa-exclamation-circle"></i> {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="loading-state">
+          <i className="fas fa-spinner fa-spin"></i>
+          <p>Loading documents...</p>
+        </div>
+      ) : filteredDocuments.length > 0 ? (
+        <>
+          <div className="documents-count">
+            Showing {filteredDocuments.length} of {documents.length} documents
+          </div>
+          <div className="documents-grid">
+            {filteredDocuments.map((doc) => (
+              <div key={doc.id} className="document-card">
+                <div className="document-card-header">
+                  <div className={`file-icon ${getFileIcon(doc.fileType)}`}>
+                    <i className={`fas ${getFileIcon(doc.fileType)}`}></i>
+                  </div>
+                  <span className="category-badge">{doc.category}</span>
+                </div>
+
+                <div className="document-card-body">
+                  <h3 className="document-title">{doc.fileName}</h3>
+                  {doc.description && (
+                    <p className="document-description">{doc.description}</p>
+                  )}
+
+                  <div className="document-meta">
+                    <span>
+                      <i className="fas fa-database"></i>{" "}
+                      {formatFileSize(doc.fileSize)}
+                    </span>
+                    <span>
+                      <i className="fas fa-clock"></i>{" "}
+                      {formatDate(doc.uploadDate)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="document-card-actions">
+                  <button
+                    onClick={() => handleDownload(doc)}
+                    className="btn-action btn-download"
+                    title="Download"
+                  >
+                    <i className="fas fa-download"></i>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(doc.id)}
+                    className="btn-action btn-delete"
+                    title="Delete"
+                  >
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="empty-state">
+          <i className="fas fa-folder-open"></i>
+          <h3>No documents found</h3>
+          <p>
+            {searchTerm || selectedCategory !== "All"
+              ? "Try adjusting your filters"
+              : "Upload your first document to get started"}
+          </p>
+          {!searchTerm && selectedCategory === "All" && (
+            <button onClick={() => navigate("/upload")} className="btn-primary">
+              <i className="fas fa-cloud-upload-alt"></i> Upload Document
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Documents;
