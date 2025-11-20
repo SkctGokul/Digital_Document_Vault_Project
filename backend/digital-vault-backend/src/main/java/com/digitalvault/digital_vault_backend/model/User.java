@@ -32,8 +32,16 @@ public class User {
     
     private String fullName;
     
+    @Column(nullable = false)
+    private Boolean isAdmin = false;
+    
+    @Column(nullable = false)
+    private Boolean isActive = true;
+    
     public User() {
         this.registrationDate = LocalDateTime.now();
+        this.isAdmin = false;
+        this.isActive = true;
     }
     
     // Getters and Setters
@@ -91,5 +99,21 @@ public class User {
     
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+    
+    public Boolean getIsAdmin() {
+        return isAdmin;
+    }
+    
+    public void setIsAdmin(Boolean isAdmin) {
+        this.isAdmin = isAdmin;
+    }
+    
+    public Boolean getIsActive() {
+        return isActive;
+    }
+    
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }

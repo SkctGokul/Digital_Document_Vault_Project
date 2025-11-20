@@ -2,13 +2,19 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./Navbar.css";
 
-const Navbar = ({ currentUser, onLogout }) => {
+const Navbar = ({ currentUser }) => {
+  const getLogoLink = () => {
+    if (!currentUser) return "/";
+    if (currentUser.isAdmin) return "/admin/dashboard";
+    return "/dashboard";
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo">
+        <Link to={getLogoLink()} className="navbar-logo">
           <i className="fas fa-shield-alt"></i>
-          Digital Vault
+          DocSafe
         </Link>
 
         <ul className="navbar-menu">
@@ -33,8 +39,37 @@ const Navbar = ({ currentUser, onLogout }) => {
                 </Link>
               </li>
             </>
+          ) : currentUser.isAdmin ? (
+            <>
+              {/* Admin Menu */}
+              <li className="navbar-item">
+                <Link to="/admin/dashboard" className="navbar-link">
+                  <i className="fas fa-tachometer-alt"></i> Dashboard
+                </Link>
+              </li>
+              <li className="navbar-item">
+                <Link to="/admin/users" className="navbar-link">
+                  <i className="fas fa-users"></i> User Management
+                </Link>
+              </li>
+              <li className="navbar-item">
+                <Link to="/admin/documents" className="navbar-link">
+                  <i className="fas fa-file-alt"></i> All Documents
+                </Link>
+              </li>
+              <li className="navbar-item">
+                <Link
+                  to="/profile"
+                  className="navbar-user"
+                  title="View profile"
+                >
+                  <i className="fas fa-user-circle"></i> {currentUser.username}
+                </Link>
+              </li>
+            </>
           ) : (
             <>
+              {/* Regular User Menu */}
               <li className="navbar-item">
                 <Link to="/dashboard" className="navbar-link">
                   Dashboard
@@ -56,17 +91,13 @@ const Navbar = ({ currentUser, onLogout }) => {
                 </Link>
               </li>
               <li className="navbar-item">
-                <span className="navbar-user">
-                  <i className="fas fa-user-circle"></i> {currentUser.username}
-                </span>
-              </li>
-              <li className="navbar-item">
-                <button
-                  onClick={onLogout}
-                  className="navbar-link navbar-logout"
+                <Link
+                  to="/profile"
+                  className="navbar-user"
+                  title="View profile"
                 >
-                  Logout
-                </button>
+                  <i className="fas fa-user-circle"></i> {currentUser.username}
+                </Link>
               </li>
             </>
           )}

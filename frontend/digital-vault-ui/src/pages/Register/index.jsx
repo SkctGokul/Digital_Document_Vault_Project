@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerUser } from "../services/api";
+import { registerUser } from "../../services/api";
 import "./Register.css";
 
 const Register = () => {
@@ -11,14 +11,17 @@ const Register = () => {
     password: "",
     confirmPassword: "",
     fullName: "",
+    registerAsAdmin: false,
+    adminCode: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === "checkbox" ? checked : value,
     });
     setError("");
   };
@@ -27,44 +30,85 @@ const Register = () => {
     e.preventDefault();
     setError("");
 
+    // Trim all inputs
+    const trimmedData = {
+      username: formData.username?.trim() || "",
+      email: formData.email?.trim() || "",
+      password: formData.password?.trim() || "",
+      confirmPassword: formData.confirmPassword?.trim() || "",
+      fullName: formData.fullName?.trim() || "",
+      registerAsAdmin: formData.registerAsAdmin,
+      adminCode: formData.adminCode?.trim() || "",
+    };
+
     // Validation
     if (
-      !formData.username ||
-      !formData.email ||
-      !formData.password ||
-      !formData.fullName
+      !trimmedData.username ||
+      !trimmedData.email ||
+      !trimmedData.password ||
+      !trimmedData.fullName
     ) {
       setError("All fields are required");
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (trimmedData.password !== trimmedData.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (trimmedData.password.length < 6) {
       setError("Password must be at least 6 characters long");
       return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedData.email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    // Admin registration validation
+    if (trimmedData.registerAsAdmin) {
+      const ADMIN_SECRET_CODE = "ADMIN2025"; // Admin registration code
+      if (!trimmedData.adminCode) {
+        setError("Admin registration code is required");
+        return;
+      }
+      if (trimmedData.adminCode !== ADMIN_SECRET_CODE) {
+        setError("Invalid admin registration code");
+        return;
+      }
     }
 
     setLoading(true);
 
     try {
       const userData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        fullName: formData.fullName,
+        username: trimmedData.username,
+        email: trimmedData.email,
+        password: trimmedData.password,
+        fullName: trimmedData.fullName,
+        isAdmin: trimmedData.registerAsAdmin,
+        isActive: true,
       };
 
       const response = await registerUser(userData);
 
-      if (response.error) {
-        setError(response.error);
+      if (!response || response.error) {
+        setError(response?.error || "Registration failed. Please try again.");
       } else {
-        alert("Registration successful! Please login.");
-        navigate("/login");
+        const accountType = trimmedData.registerAsAdmin ? "admin" : "user";
+        const loginRoute = trimmedData.registerAsAdmin
+          ? "/admin/login"
+          : "/login";
+        alert(
+          `${
+            accountType.charAt(0).toUpperCase() + accountType.slice(1)
+          } account created successfully! Please login.`
+        );
+        navigate(loginRoute);
       }
     } catch (err) {
       setError("Registration failed. Please try again.");
@@ -80,7 +124,7 @@ const Register = () => {
         <div className="register-header">
           <i className="fas fa-user-plus"></i>
           <h2>Create Your Account</h2>
-          <p>Join Digital Vault and secure your documents</p>
+          <p>Join DocSafe and secure your documents</p>
         </div>
 
         <form onSubmit={handleSubmit} className="register-form">
@@ -164,6 +208,41 @@ const Register = () => {
               required
             />
           </div>
+
+          <div className="form-group admin-toggle">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                name="registerAsAdmin"
+                checked={formData.registerAsAdmin}
+                onChange={handleChange}
+              />
+              <span className="checkbox-text">
+                <i className="fas fa-user-shield"></i> Register as Administrator
+              </span>
+            </label>
+          </div>
+
+          {formData.registerAsAdmin && (
+            <div className="form-group admin-code-group">
+              <label htmlFor="adminCode">
+                <i className="fas fa-key"></i> Admin Registration Code
+              </label>
+              <input
+                type="password"
+                id="adminCode"
+                name="adminCode"
+                value={formData.adminCode}
+                onChange={handleChange}
+                placeholder="Enter admin registration code"
+                required={formData.registerAsAdmin}
+              />
+              <small className="admin-code-hint">
+                <i className="fas fa-info-circle"></i> Contact system
+                administrator for the registration code
+              </small>
+            </div>
+          )}
 
           <button type="submit" className="btn-submit" disabled={loading}>
             {loading ? (

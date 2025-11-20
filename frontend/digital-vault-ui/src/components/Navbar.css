@@ -1,47 +1,51 @@
 .navbar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--secondary-color);
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
   position: sticky;
   top: 0;
   z-index: 1000;
+  border-bottom: none;
 }
 
 .navbar-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 1.2rem 3rem;
 }
 
 .navbar-logo {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: white;
+  color: var(--dark);
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: transform 0.3s ease;
+  transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .navbar-logo:hover {
-  transform: scale(1.05);
+  color: var(--primary-dark);
 }
 
 .navbar-logo i {
-  font-size: 2rem;
+  font-size: 1.5rem;
+  color: var(--primary-color);
 }
 
 .navbar-menu {
   display: flex;
   list-style: none;
-  gap: 1.5rem;
+  gap: 0.25rem;
   margin: 0;
   padding: 0;
   align-items: center;
+  margin-left: auto;
 }
 
 .navbar-item {
@@ -49,67 +53,132 @@
 }
 
 .navbar-link {
-  color: white;
+  color: var(--dark);
   text-decoration: none;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
   background: transparent;
   border: none;
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .navbar-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+  background: rgba(212, 145, 93, 0.15);
+  color: var(--primary-dark);
 }
 
 .navbar-link-register {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid white;
+  background: var(--primary-color);
+  color: var(--white);
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
 }
 
 .navbar-link-register:hover {
-  background: white;
-  color: #667eea;
+  background: var(--primary-dark);
+  color: var(--white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.navbar-link-admin {
+  background: linear-gradient(
+    135deg,
+    var(--accent-color),
+    var(--primary-color)
+  );
+  color: var(--white);
+  font-weight: 600;
+  padding: 0.6rem 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-link-admin:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  opacity: 0.9;
 }
 
 .navbar-logout {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--danger-color);
+  border: 1.5px solid var(--danger-color);
 }
 
 .navbar-logout:hover {
-  background: rgba(255, 59, 48, 0.8);
-  border-color: rgba(255, 59, 48, 1);
+  background: var(--danger-color);
+  color: var(--white);
 }
 
 .navbar-user {
-  color: white;
+  color: var(--text-primary);
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  background: var(--gray-lighter);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.navbar-user:hover {
+  background: var(--gray-light);
 }
 
 .navbar-user i {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+@media (max-width: 1024px) {
+  .navbar-container {
+    padding: 1rem 1.5rem;
+  }
+
+  .navbar-menu {
+    gap: 0.3rem;
+  }
+
+  .navbar-link {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 768px) {
   .navbar-container {
     flex-direction: column;
     gap: 1rem;
+    padding: 1rem;
+  }
+
+  .navbar-logo {
+    font-size: 1.6rem;
   }
 
   .navbar-menu {
     flex-wrap: wrap;
     justify-content: center;
+    margin-left: 0;
+    gap: 0.5rem;
+  }
+
+  .navbar-link,
+  .navbar-user {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.8rem;
   }
 }

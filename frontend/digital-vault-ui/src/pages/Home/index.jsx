@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
+import homeImg from "../../assets/digivault home image.jpg";
 
 const Home = () => {
   return (
@@ -23,14 +24,16 @@ const Home = () => {
           </div>
         </div>
         <div className="hero-image">
-          <i className="fas fa-file-alt floating-icon"></i>
-          <i className="fas fa-lock floating-icon"></i>
-          <i className="fas fa-cloud-upload-alt floating-icon"></i>
+          <img
+            src={homeImg}
+            alt="Document Management System"
+            className="hero-img"
+          />
         </div>
       </section>
 
       <section className="features-section">
-        <h2 className="section-title">Why Choose Digital Vault?</h2>
+        <h2 className="section-title">Why Choose DocSafe?</h2>
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">
@@ -97,19 +100,6 @@ const Home = () => {
               or mobile.
             </p>
           </div>
-        </div>
-      </section>
-
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>Ready to Get Started?</h2>
-          <p>
-            Join thousands of users who trust Digital Vault with their important
-            documents
-          </p>
-          <Link to="/register" className="btn btn-cta">
-            Create Your Free Account <i className="fas fa-arrow-right"></i>
-          </Link>
         </div>
       </section>
     </div>

@@ -3,8 +3,22 @@ const API_BASE_URL = "http://localhost:8080/api";
 // Helper function to handle API responses
 const handleResponse = async (response) => {
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `HTTP error! status: ${response.status}`);
+    const contentType = response.headers.get("content-type");
+    let errorMessage = `HTTP error! status: ${response.status}`;
+
+    try {
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } else {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      }
+    } catch (parseError) {
+      console.error("Error parsing error response:", parseError);
+    }
+
+    throw new Error(errorMessage);
   }
 
   const contentType = response.headers.get("content-type");
@@ -109,4 +123,81 @@ export const downloadDocument = async (documentId) => {
   }
 
   return response.blob();
+};
+
+export const updateDocument = async (documentId, updatedData) => {
+  const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updatedData),
+  });
+  return handleResponse(response);
+};
+
+// User login
+export const loginUser = async (username, password) => {
+  const response = await fetch(`${API_BASE_URL}/users/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+  return handleResponse(response);
+};
+
+// Admin API calls
+export const adminLogin = async (username, password) => {
+  const response = await fetch(`${API_BASE_URL}/users/admin/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+  return handleResponse(response);
+};
+
+export const toggleUserStatus = async (userId) => {
+  const response = await fetch(
+    `${API_BASE_URL}/users/admin/toggle-status/${userId}`,
+    {
+      method: "PUT",
+    }
+  );
+  return handleResponse(response);
+};
+
+export const toggleAdminStatus = async (userId) => {
+  const response = await fetch(
+    `${API_BASE_URL}/users/admin/toggle-admin/${userId}`,
+    {
+      method: "PUT",
+    }
+  );
+  return handleResponse(response);
+};
+
+export const deleteUserAdmin = async (userId) => {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+    method: "DELETE",
+  });
+  return handleResponse(response);
+};
+
+export const getAdminStats = async () => {
+  const response = await fetch(`${API_BASE_URL}/users/admin/stats`);
+  return handleResponse(response);
+};
+
+export const getAllDocumentsAdmin = async () => {
+  const response = await fetch(`${API_BASE_URL}/documents/admin/all`);
+  return handleResponse(response);
+};
+
+export const getDocumentStatsAdmin = async () => {
+  const response = await fetch(`${API_BASE_URL}/documents/admin/stats`);
+  return handleResponse(response);
 };

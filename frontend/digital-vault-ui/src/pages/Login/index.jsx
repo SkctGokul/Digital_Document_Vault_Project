@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUserByUsername } from "../services/api";
+import { loginUser } from "../../services/api";
 import "./Login.css";
 
 const Login = ({ onLogin }) => {
@@ -29,23 +29,39 @@ const Login = ({ onLogin }) => {
       return;
     }
 
+    // Trim whitespace from inputs
+    const username = formData.username?.trim();
+    const password = formData.password?.trim();
+
+    if (!username || !password) {
+      setError("Please enter valid username and password");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Simple authentication check (in production, use proper backend authentication)
-      const response = await getUserByUsername(formData.username);
+      // Authenticate with backend
+      const response = await loginUser(username, password);
 
-      if (response.error) {
-        setError("Invalid username or password");
-      } else {
-        // In production, verify password with backend
-        // For now, just store user info
-        localStorage.setItem("currentUser", JSON.stringify(response));
-        onLogin(response);
+      // Check if login was successful
+      if (response && response.user) {
+        // Check if user is an admin trying to login through regular login
+        if (response.user.isAdmin === true) {
+          setError("Admin users must login through the Admin Portal");
+          return;
+        }
+
+        // Store user info in localStorage
+        localStorage.setItem("currentUser", JSON.stringify(response.user));
+        onLogin(response.user);
         navigate("/dashboard");
+      } else {
+        setError("Invalid username or password");
       }
     } catch (err) {
-      setError("Login failed. Please check your credentials.");
+      // Display the error message from the server
+      setError(err.message || "Login failed. Please check your credentials.");
       console.error("Login error:", err);
     } finally {
       setLoading(false);
@@ -58,7 +74,7 @@ const Login = ({ onLogin }) => {
         <div className="login-header">
           <i className="fas fa-sign-in-alt"></i>
           <h2>Welcome Back</h2>
-          <p>Sign in to access your digital vault</p>
+          <p>Sign in to access your secure documents</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -125,6 +141,11 @@ const Login = ({ onLogin }) => {
           <p>
             Don't have an account? <a href="/register">Create Account</a>
           </p>
+          <div className="admin-login-link">
+            <a href="/admin/login" className="admin-link">
+              <i className="fas fa-user-shield"></i> Administrator Login
+            </a>
+          </div>
         </div>
       </div>
     </div>

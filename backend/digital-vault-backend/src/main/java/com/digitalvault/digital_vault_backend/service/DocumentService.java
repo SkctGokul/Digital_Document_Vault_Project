@@ -14,11 +14,15 @@ public interface DocumentService {
     
     Document getDocumentById(Long id);
     
+    List<Document> getAllDocuments();
+    
     List<Document> getAllDocumentsByUserId(Long userId);
     
     List<Document> getDocumentsByUserIdAndCategory(Long userId, String category);
     
     List<Document> searchDocumentsByFileName(Long userId, String fileName);
+    
+    Document updateDocument(Long id, Document updatedDocument);
     
     void deleteDocument(Long id);
     

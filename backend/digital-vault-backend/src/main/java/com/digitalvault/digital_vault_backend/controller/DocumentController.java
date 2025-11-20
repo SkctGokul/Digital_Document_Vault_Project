@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -34,6 +36,27 @@ public class DocumentController {
     public ResponseEntity<Document> getDocumentById(@PathVariable Long id) {
         Document document = documentService.getDocumentById(id);
         return ResponseEntity.ok(document);
+    }
+
+    // ✅ Get all documents (for admin)
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<Document>> getAllDocuments() {
+        List<Document> documents = documentService.getAllDocuments();
+        return ResponseEntity.ok(documents);
+    }
+
+    // ✅ Get admin document statistics
+    @GetMapping("/admin/stats")
+    public ResponseEntity<Map<String, Object>> getDocumentStats() {
+        List<Document> allDocuments = documentService.getAllDocuments();
+        
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalDocuments", allDocuments.size());
+        stats.put("totalSize", allDocuments.stream()
+            .mapToLong(doc -> doc.getFileData() != null ? doc.getFileData().length : 0)
+            .sum());
+        
+        return ResponseEntity.ok(stats);
     }
 
     // ✅ Get all documents by userId
@@ -75,5 +98,12 @@ public class DocumentController {
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=document_" + id + ".bin")
                 .body(fileData);
+    }
+
+    // ✅ Update document metadata (filename, category, description)
+    @PutMapping("/{id}")
+    public ResponseEntity<Document> updateDocument(@PathVariable Long id, @RequestBody Document updatedDocument) {
+        Document document = documentService.updateDocument(id, updatedDocument);
+        return ResponseEntity.ok(document);
     }
 }

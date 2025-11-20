@@ -7,21 +7,40 @@ const Downloads = ({ currentUser }) => {
   const [downloads, setDownloads] = useState([]);
   const [filteredDownloads, setFilteredDownloads] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  // Editing is moved to the Documents page; downloads only shows history
 
   useEffect(() => {
     // Load downloads from localStorage
-    loadDownloads();
-  }, []);
+    if (currentUser) {
+      loadDownloads();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     filterDownloads();
   }, [downloads, searchTerm]);
 
   const loadDownloads = () => {
-    const storedDownloads = localStorage.getItem("downloadHistory");
-    if (storedDownloads) {
-      const parsed = JSON.parse(storedDownloads);
-      setDownloads(parsed);
+    try {
+      const storedDownloads = localStorage.getItem("downloadHistory");
+      if (storedDownloads) {
+        const parsed = JSON.parse(storedDownloads);
+        // Validate that parsed is an array
+        if (Array.isArray(parsed)) {
+          // Filter downloads for the current user only
+          const userDownloads = parsed.filter(
+            (d) => d && d.fileName && d.userId === currentUser?.id
+          );
+          setDownloads(userDownloads);
+        } else {
+          setDownloads([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading download history:", error);
+      // Clear corrupted data
+      localStorage.removeItem("downloadHistory");
+      setDownloads([]);
     }
   };
 
@@ -30,24 +49,60 @@ const Downloads = ({ currentUser }) => {
       setFilteredDownloads(downloads);
     } else {
       const filtered = downloads.filter((download) =>
-        download.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+        download?.fileName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredDownloads(filtered);
     }
   };
 
   const clearHistory = () => {
-    if (window.confirm("Are you sure you want to clear download history?")) {
-      localStorage.removeItem("downloadHistory");
-      setDownloads([]);
-      setFilteredDownloads([]);
+    if (
+      window.confirm("Are you sure you want to clear your download history?")
+    ) {
+      try {
+        const storedDownloads = localStorage.getItem("downloadHistory");
+        if (storedDownloads) {
+          const allDownloads = JSON.parse(storedDownloads);
+          // Keep downloads from other users, remove only current user's downloads
+          const otherUsersDownloads = allDownloads.filter(
+            (d) => d.userId !== currentUser?.id
+          );
+          localStorage.setItem(
+            "downloadHistory",
+            JSON.stringify(otherUsersDownloads)
+          );
+        }
+        setDownloads([]);
+        setFilteredDownloads([]);
+      } catch (error) {
+        console.error("Error clearing download history:", error);
+      }
     }
   };
 
   const removeDownload = (downloadId) => {
-    const updated = downloads.filter((d) => d.downloadId !== downloadId);
-    localStorage.setItem("downloadHistory", JSON.stringify(updated));
-    setDownloads(updated);
+    try {
+      const storedDownloads = localStorage.getItem("downloadHistory");
+      if (storedDownloads) {
+        const allDownloads = JSON.parse(storedDownloads);
+        // Remove the specific download from all downloads
+        const updatedAllDownloads = allDownloads.filter(
+          (d) => d.downloadId !== downloadId
+        );
+        localStorage.setItem(
+          "downloadHistory",
+          JSON.stringify(updatedAllDownloads)
+        );
+
+        // Update current user's downloads view
+        const updatedUserDownloads = downloads.filter(
+          (d) => d.downloadId !== downloadId
+        );
+        setDownloads(updatedUserDownloads);
+      }
+    } catch (error) {
+      console.error("Error removing download:", error);
+    }
   };
 
   const formatFileSize = (bytes) => {

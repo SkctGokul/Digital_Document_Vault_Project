@@ -48,6 +48,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
     
     @Override
+    public List<Document> getAllDocuments() {
+        return documentRepository.findAll();
+    }
+    
+    @Override
     public List<Document> getAllDocumentsByUserId(Long userId) {
         return documentRepository.findByUserId(userId);
     }
@@ -72,5 +77,20 @@ public class DocumentServiceImpl implements DocumentService {
     public byte[] downloadDocument(Long id) {
         Document document = getDocumentById(id);
         return document.getFileData();
+    }
+
+    @Override
+    public Document updateDocument(Long id, Document updatedDocument) {
+        Document document = getDocumentById(id);
+        if (updatedDocument.getFileName() != null) {
+            document.setFileName(updatedDocument.getFileName());
+        }
+        if (updatedDocument.getCategory() != null) {
+            document.setCategory(updatedDocument.getCategory());
+        }
+        if (updatedDocument.getDescription() != null) {
+            document.setDescription(updatedDocument.getDescription());
+        }
+        return documentRepository.save(document);
     }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getAllDocumentsByUserId } from "../services/api";
+import { getAllDocumentsByUserId } from "../../services/api";
 import "./Dashboard.css";
 
 const Dashboard = ({ currentUser }) => {
@@ -68,7 +68,13 @@ const Dashboard = ({ currentUser }) => {
     <div className="dashboard-container">
       <div className="dashboard-header">
         <div className="welcome-section">
-          <h1>Welcome back, {currentUser.fullName || currentUser.username}!</h1>
+          <h1>
+            Welcome back,{" "}
+            <span className="user-name">
+              {currentUser.fullName || currentUser.username}
+            </span>
+            !
+          </h1>
           <p>Here's what's happening with your documents today.</p>
         </div>
       </div>
@@ -76,7 +82,7 @@ const Dashboard = ({ currentUser }) => {
       <div className="stats-grid">
         <div className="stat-card stat-primary">
           <div className="stat-icon">
-            <i className="fas fa-file-alt"></i>
+            <i className="fas fa-file"></i>
           </div>
           <div className="stat-content">
             <h3>Total Documents</h3>
@@ -86,7 +92,7 @@ const Dashboard = ({ currentUser }) => {
 
         <div className="stat-card stat-success">
           <div className="stat-icon">
-            <i className="fas fa-folder"></i>
+            <i className="fas fa-folder-open"></i>
           </div>
           <div className="stat-content">
             <h3>Categories</h3>
@@ -98,7 +104,7 @@ const Dashboard = ({ currentUser }) => {
 
         <div className="stat-card stat-info">
           <div className="stat-icon">
-            <i className="fas fa-cloud-upload-alt"></i>
+            <i className="fas fa-upload"></i>
           </div>
           <div className="stat-content">
             <h3>Recent Uploads</h3>
@@ -108,7 +114,7 @@ const Dashboard = ({ currentUser }) => {
 
         <div className="stat-card stat-warning">
           <div className="stat-icon">
-            <i className="fas fa-database"></i>
+            <i className="fas fa-hdd"></i>
           </div>
           <div className="stat-content">
             <h3>Storage Used</h3>
@@ -128,11 +134,11 @@ const Dashboard = ({ currentUser }) => {
           </h2>
           <div className="action-buttons">
             <Link to="/upload" className="action-btn action-upload">
-              <i className="fas fa-cloud-upload-alt"></i>
+              <i className="fas fa-upload"></i>
               <span>Upload Document</span>
             </Link>
             <Link to="/documents" className="action-btn action-view">
-              <i className="fas fa-folder-open"></i>
+              <i className="fas fa-folder"></i>
               <span>View All Documents</span>
             </Link>
             <Link
@@ -141,6 +147,10 @@ const Dashboard = ({ currentUser }) => {
             >
               <i className="fas fa-search"></i>
               <span>Search Documents</span>
+            </Link>
+            <Link to="/documents" className="action-btn action-edit">
+              <i className="fas fa-edit"></i>
+              <span>Edit Documents</span>
             </Link>
           </div>
         </div>
@@ -154,7 +164,7 @@ const Dashboard = ({ currentUser }) => {
               {stats.recentUploads.map((doc) => (
                 <div key={doc.id} className="document-item">
                   <div className="document-icon">
-                    <i className="fas fa-file-alt"></i>
+                    <i className="fas fa-file"></i>
                   </div>
                   <div className="document-info">
                     <h4>{doc.fileName}</h4>

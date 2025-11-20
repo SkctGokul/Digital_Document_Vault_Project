@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { uploadDocument } from "../services/api";
+import { uploadDocument } from "../../services/api";
 import "./Upload.css";
 
 const Upload = ({ currentUser }) => {
@@ -14,6 +14,7 @@ const Upload = ({ currentUser }) => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const categories = [
     "Personal",
@@ -28,17 +29,50 @@ const Upload = ({ currentUser }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) {
-        setError("File size must be less than 50MB");
-        return;
-      }
-      setFormData({ ...formData, file });
-      setFilePreview({
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: file.type,
-      });
-      setError("");
+      processFile(file);
+    }
+  };
+
+  const processFile = (file) => {
+    if (file.size > 50 * 1024 * 1024) {
+      setError("File size must be less than 50MB");
+      return;
+    }
+    setFormData({ ...formData, file });
+    setFilePreview({
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type,
+    });
+    setError("");
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      processFile(file);
     }
   };
 
@@ -145,7 +179,13 @@ const Upload = ({ currentUser }) => {
             </div>
           )}
 
-          <div className="file-upload-area">
+          <div
+            className={`file-upload-area ${isDragging ? "dragging" : ""}`}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
             <input
               type="file"
               id="file-input"

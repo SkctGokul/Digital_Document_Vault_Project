@@ -59,12 +59,12 @@ const Documents = ({ currentUser }) => {
     let filtered = documents;
 
     if (selectedCategory !== "All") {
-      filtered = filtered.filter((doc) => doc.category === selectedCategory);
+      filtered = filtered.filter((doc) => doc?.category === selectedCategory);
     }
 
     if (searchTerm) {
       filtered = filtered.filter((doc) =>
-        doc.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+        doc?.fileName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -105,30 +105,50 @@ const Documents = ({ currentUser }) => {
   };
 
   const saveDownloadHistory = (doc) => {
-    const downloadEntry = {
-      downloadId: Date.now() + Math.random(),
-      documentId: doc.id,
-      fileName: doc.fileName,
-      fileType: doc.fileType,
-      fileSize: doc.fileSize,
-      category: doc.category,
-      description: doc.description,
-      downloadDate: new Date().toISOString(),
-      userId: currentUser.id,
-    };
+    try {
+      // Validate doc object
+      if (!doc || !doc.fileName) {
+        console.warn("Invalid document object for download history");
+        return;
+      }
 
-    // Get existing downloads from localStorage
-    const existingDownloads = localStorage.getItem("downloadHistory");
-    const downloads = existingDownloads ? JSON.parse(existingDownloads) : [];
+      const downloadEntry = {
+        downloadId: Date.now() + Math.random(),
+        documentId: doc.id || null,
+        fileName: doc.fileName || "Unknown",
+        fileType: doc.fileType || "application/octet-stream",
+        fileSize: doc.fileSize || 0,
+        category: doc.category || "Other",
+        description: doc.description || "",
+        downloadDate: new Date().toISOString(),
+        userId: currentUser?.id || null,
+      };
 
-    // Add new download to the beginning
-    downloads.unshift(downloadEntry);
+      // Get existing downloads from localStorage
+      const existingDownloads = localStorage.getItem("downloadHistory");
+      let downloads = [];
 
-    // Keep only the last 100 downloads
-    const limitedDownloads = downloads.slice(0, 100);
+      if (existingDownloads) {
+        try {
+          const parsed = JSON.parse(existingDownloads);
+          downloads = Array.isArray(parsed) ? parsed : [];
+        } catch (parseError) {
+          console.error("Error parsing download history:", parseError);
+          downloads = [];
+        }
+      }
 
-    // Save back to localStorage
-    localStorage.setItem("downloadHistory", JSON.stringify(limitedDownloads));
+      // Add new download to the beginning
+      downloads.unshift(downloadEntry);
+
+      // Keep only the last 100 downloads
+      const limitedDownloads = downloads.slice(0, 100);
+
+      // Save back to localStorage
+      localStorage.setItem("downloadHistory", JSON.stringify(limitedDownloads));
+    } catch (error) {
+      console.error("Error saving download history:", error);
+    }
   };
 
   const formatFileSize = (bytes) => {
